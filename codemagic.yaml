@@ -2,7 +2,6 @@ workflows:
   ios_simulator:
     name: iOS Simulator (.app)
     environment:
-      flutter: "3.7.2"   # Dart 3 içerir
       xcode: latest
     triggering:
       events:
@@ -12,22 +11,28 @@ workflows:
           include: true
           source: true
     scripts:
-      - name: Show versions
+      - name: Force Flutter 3.35.3 + build
         script: |
+          set -e
+          echo ">>> Installing Flutter 3.35.3"
+          git clone https://github.com/flutter/flutter.git -b 3.35.3 $HOME/flutter_3_35_3
+          export PATH="$HOME/flutter_3_35_3/bin:$PATH"
           flutter --version
           dart --version
-      - name: Flutter deps
-        script: flutter pub get
-      - name: CocoaPods
-        script: |
+
+          echo ">>> flutter pub get"
+          flutter pub get
+
+          echo ">>> CocoaPods"
           cd ios
           pod repo update
           pod install
           cd ..
-      - name: Build for iOS Simulator (no signing)
-        script: flutter build ios --simulator --release
-      - name: Zip Runner.app for download
-        script: |
+
+          echo ">>> Build iOS Simulator"
+          flutter build ios --simulator --release
+
+          echo ">>> Zip app"
           cd build/ios/iphonesimulator
           zip -r Runner-sim.zip Runner.app
     artifacts:
