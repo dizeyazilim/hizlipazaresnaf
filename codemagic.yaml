@@ -2,7 +2,7 @@ workflows:
   ios_simulator:
     name: iOS Simulator (.app)
     environment:
-      flutter: "3.22.2"   # Dart 3 içerir
+      flutter: "3.7.2"   # Dart 3 içerir
       xcode: latest
     triggering:
       events:
