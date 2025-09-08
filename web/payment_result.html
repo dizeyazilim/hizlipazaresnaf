@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Yönlendiriliyor...</title>
+    <script>
+      const url = new URL(window.location.href);
+      const status = url.searchParams.get("status");
+
+      if (status === "basarili" || status === "basarisiz") {
+        // Flutter Web'e yönlendir (hash route ile)
+        window.location.href = `/web/#/payment-return?status=${status}`;
+      } else {
+        document.body.innerText = "Geçersiz işlem.";
+      }
+    </script>
+  </head>
+  <body>
+    <p style="text-align: center; margin-top: 50px">Yönlendiriliyorsunuz...</p>
+  </body>
+</html>
