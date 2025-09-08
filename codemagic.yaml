@@ -13,71 +13,36 @@ workflows:
         - ios/Pods
         - $HOME/Library/Developer/Xcode/DerivedData
         - $HOME/Library/Caches/CocoaPods
-    triggering:
-      events: [ push ]
-      branch_patterns:
-        - pattern: main
-          include: true
-          source: true
     scripts:
-      - name: Flutter hazırlık (precache iOS)
+      - name: Flutter hazırlık
         script: |
+          set -euxo pipefail
           flutter --version
-          # iOS engine ve header’ları indir (sim hatalarının çoğu bunlardan)
           flutter precache --ios --force
           flutter pub get
-      - name: Pod temizliği
+      - name: Pods temizliği
         script: |
-          # Temiz bir ortam
+          set -euxo pipefail
           rm -rf ios/Pods ios/Podfile.lock
           cd ios
           pod repo update
           pod deintegrate || true
           cd ..
-      - name: Podfile’ı DOĞRU şablonla yaz
+      - name: Pod install
         script: |
-          cat > ios/Podfile <<'PODFILE'
-          platform :ios, '13.0'
-
-          require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root = `flutter --flutter-root`.strip)
-
-          flutter_ios_podfile_setup
-
-          target 'Runner' do
-            # Çoğu projede framework’e gerek yok; sorun çıkarıyorsa açma.
-            # use_frameworks! :linkage => :static if ENV['USE_FRAMEWORKS'] == 'true'
-            use_modular_headers!
-
-            flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
-          end
-
-          post_install do |installer|
-            flutter_additional_ios_build_settings(installer)
-
-            # Apple Silicon sim build karışıklıklarını engelle
-            installer.pods_project.targets.each do |t|
-              t.build_configurations.each do |config|
-                config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
-                config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
-              end
-            end
-          end
-          PODFILE
-          echo "Podfile yazıldı:"
-          tail -n +1 ios/Podfile
-      - name: Pods kurulum
-        script: |
+          set -euxo pipefail
           cd ios
           pod install --verbose
           cd ..
       - name: iOS (Simulator, no codesign) build
         script: |
-          # En hızlı seçenek: debug sim
+          set -euxo pipefail
+          # En hızlı: Debug sim
+          flutter clean
           flutter build ios --simulator --debug --no-codesign
-          # Release sim istersen:
-          # flutter build ios --simulator --release --no-codesign
       - name: .app paketle (zip)
         script: |
+          set -euxo pipefail
           APP_DIR="build/ios/iphonesimulator"
           APP_PATH=$(find "$APP_DIR" -maxdepth 1 -name "*.app" | head -n1)
           if [ -z "$APP_PATH" ]; then
