@@ -1,0 +1,25 @@
+# iOS minimum sürüm
+platform :ios, '13.0'
+use_frameworks! :linkage => :static
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+# Flutter pod helper'ı yükle
+require File.expand_path(File.join('..', 'Flutter', 'podhelper.rb'), __FILE__)
+
+flutter_ios_podfile_setup
+
+target 'Runner' do
+  # (isteğe bağlı) bir kez daha belirtelim
+  use_frameworks! :linkage => :static
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+end
+
+post_install do |installer|
+  # Tüm pod hedeflerini iOS 13.0'a hizala
+  installer.pods_project.targets.each do |t|
+    t.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+    end
+  end
+  flutter_additional_ios_build_settings(installer)
+end
