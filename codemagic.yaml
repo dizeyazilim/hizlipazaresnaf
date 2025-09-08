@@ -11,12 +11,13 @@ workflows:
           include: true
           source: true
     scripts:
-      - name: Force Flutter 3.35.3 + build
+      - name: Build with Flutter 3.35.3 (Dart 3.5)
         script: |
           set -e
-          echo ">>> Installing Flutter 3.35.3"
-          git clone https://github.com/flutter/flutter.git -b 3.35.3 $HOME/flutter_3_35_3
-          export PATH="$HOME/flutter_3_35_3/bin:$PATH"
+          FVER=3.35.3
+          echo ">>> Install Flutter $FVER"
+          git clone --depth 1 -b $FVER https://github.com/flutter/flutter.git $HOME/flutter_$FVER
+          export PATH="$HOME/flutter_$FVER/bin:$PATH"
           flutter --version
           dart --version
 
