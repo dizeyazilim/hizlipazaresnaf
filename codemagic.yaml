@@ -2,11 +2,15 @@ workflows:
   ios_simulator:
     name: iOS Simulator (.app)
     environment:
-      flutter: stable
+      flutter: "3.22.2"     # Dart 3.x içerir
       xcode: latest
     triggering:
-      events: [ workflow_dispatch ]  # Codemagic panelinden manuel başlat
+      events: [ workflow_dispatch ]
     scripts:
+      - name: Show versions
+        script: |
+          flutter --version
+          dart --version
       - name: Flutter deps
         script: flutter pub get
       - name: Build for iOS Simulator (no signing)
@@ -21,10 +25,10 @@ workflows:
   ios_testflight:
     name: iOS Release (TestFlight)
     environment:
-      flutter: stable
+      flutter: "3.22.2"     # Dart 3.x
       xcode: latest
       vars:
-        BUNDLE_ID: "com.hizlipazaresnaf.app"   # kendi Bundle ID'in
+        BUNDLE_ID: "com.hizlipazaresnaf.app"
     triggering:
       events: [ push ]
       branch_patterns:
@@ -32,19 +36,20 @@ workflows:
           include: true
           source: true
     scripts:
-      - name: Flutter deps
-        script: flutter pub get
+      - name: Show versions
+        script: |
+          flutter --version
+          dart --version
       - name: CocoaPods
         script: |
           cd ios
+          pod repo update
           pod install
           cd ..
       - name: Build IPA
         script: |
-          flutter build ipa \
-            --release \
-            --build-name=1.0.0 \
-            --build-number=1
+          flutter pub get
+          flutter build ipa --release --build-name=1.0.0 --build-number=1
     artifacts:
       - build/ios/ipa/*.ipa
       - build/ios/archive/*.xcarchive
