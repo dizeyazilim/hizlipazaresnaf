@@ -7,7 +7,6 @@ project 'Runner', {
   'Release' => :release,
 }
 
-# FLUTTER_ROOT'u ios/Flutter/Generated.xcconfig içinden bul
 def flutter_root
   generated_xcode_build_settings_path = File.expand_path(File.join('Flutter', 'Generated.xcconfig'), __dir__)
   unless File.exist?(generated_xcode_build_settings_path)
@@ -20,7 +19,6 @@ def flutter_root
   raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}"
 end
 
-# Doğru podhelper
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
 
 flutter_ios_podfile_setup
@@ -31,19 +29,18 @@ target 'Runner' do
 end
 
 post_install do |installer|
-  # CocoaPods 1.16 uyumluluk patch’i: Flutter podhelper `platform_name` bekliyor.
-  unless installer.respond_to?(:platform_name)
-    def installer.platform_name
-      :ios
-    end
+  # Flutter’ın ek ayarlarını çağırmayı dene; CocoaPods API uyuşmazlığında düşürme.
+  begin
+    flutter_additional_ios_build_settings(installer)
+  rescue => e
+    puts("⚠️  Skipping flutter_additional_ios_build_settings: #{e.class}: #{e.message}")
   end
 
-  # Min iOS sürümünü hizala
+  # Min iOS ve simulator için arm64 hariç (M1 sim)
   installer.pods_project.targets.each do |t|
     t.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
     end
   end
-
-  flutter_additional_ios_build_settings(installer)
 end
