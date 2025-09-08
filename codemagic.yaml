@@ -1,8 +1,19 @@
+# codemagic.yaml — iOS Simulator build (no codesign)
 workflows:
   ios_simulator:
-    name: iOS Simulator (.app)
+    name: iOS Simulator Build
+    max_build_duration: 30
+    instance_type: mac_mini_m1
     environment:
-      xcode: latest
+      flutter: 3.35.3
+      xcode: 16.1
+      cocoapods: 1.15.2
+    cache:
+      cache_paths:
+        - ~/.pub-cache
+        - ios/Pods
+        - $HOME/Library/Developer/Xcode/DerivedData
+        - $HOME/Library/Caches/CocoaPods
     triggering:
       events:
         - push
@@ -11,30 +22,31 @@ workflows:
           include: true
           source: true
     scripts:
-      - name: Build with Flutter 3.35.3 (Dart 3.5)
+      - name: Flutter & Pods
         script: |
-          set -e
-          FVER=3.35.3
-          echo ">>> Install Flutter $FVER"
-          git clone --depth 1 -b $FVER https://github.com/flutter/flutter.git $HOME/flutter_$FVER
-          export PATH="$HOME/flutter_$FVER/bin:$PATH"
           flutter --version
-          dart --version
-
-          echo ">>> flutter pub get"
           flutter pub get
-
-          echo ">>> CocoaPods"
           cd ios
           pod repo update
           pod install
           cd ..
-
-          echo ">>> Build iOS Simulator"
-          flutter build ios --simulator --release
-
-          echo ">>> Zip app"
-          cd build/ios/iphonesimulator
-          zip -r Runner-sim.zip Runner.app
+      - name: Build iOS (Simulator, no codesign)
+        script: |
+          # Debug simülator derlemesi (en hızlı seçenek).
+          flutter build ios --simulator --debug --no-codesign
+          # İstersen release simülator: flutter build ios --simulator --release --no-codesign
+      - name: Paketle (.app → .zip)
+        script: |
+          APP_DIR="build/ios/iphonesimulator"
+          APP_PATH=$(find "$APP_DIR" -maxdepth 1 -name "*.app" | head -n1)
+          if [ -z "$APP_PATH" ]; then
+            echo "Simulator .app bulunamadı"; exit 1
+          fi
+          echo "APP_PATH=$APP_PATH"
+          cd "$APP_DIR"
+          zip -r "Runner.app.zip" "$(basename "$APP_PATH")"
+          echo "Ziplendi: $APP_DIR/Runner.app.zip"
     artifacts:
-      - build/ios/iphonesimulator/Runner-sim.zip
+      - build/ios/iphonesimulator/*.app
+      - build/ios/iphonesimulator/Runner.app.zip
+      - flutter_drive.log
