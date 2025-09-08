@@ -1,15 +1,31 @@
-# iOS minimum sürüm
 platform :ios, '13.0'
-use_frameworks! :linkage => :static
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
-# Flutter pod helper'ı yükle
-require File.expand_path(File.join('..', 'Flutter', 'podhelper.rb'), __FILE__)
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+# FLUTTER_ROOT'u ios/Flutter/Generated.xcconfig içinden okur
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('Flutter', 'Generated.xcconfig'), __dir__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. Run `flutter pub get` first."
+  end
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}"
+end
+
+# DOĞRU require (Flutter SDK içindeki podhelper)
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
 
 flutter_ios_podfile_setup
 
 target 'Runner' do
-  # (isteğe bağlı) bir kez daha belirtelim
   use_frameworks! :linkage => :static
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
