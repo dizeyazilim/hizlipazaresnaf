@@ -1,6 +1,6 @@
 workflows:
   ios_simulator:
-    name: iOS Simulator Build
+    name: iOS Simulator Build (Flutter.h fix)
     max_build_duration: 30
     instance_type: mac_mini_m1
     environment:
@@ -20,27 +20,61 @@ workflows:
           include: true
           source: true
     scripts:
-      - name: CocoaPods yükselt (gerekirse) ve hazırlık
-        script: |
-          pod --version || true
-          # Bazı imajlarda brew/gem çakışması olabiliyor; aşağıdaki satırlar güvenli:
-          sudo gem install cocoapods -v '>=1.16.2'
-          pod repo update
-      - name: Flutter & Pods temiz kurulum
+      - name: Flutter hazırlık (precache iOS)
         script: |
           flutter --version
-          flutter clean
+          # iOS engine ve header’ları indir (sim hatalarının çoğu bunlardan)
+          flutter precache --ios --force
           flutter pub get
+      - name: Pod temizliği
+        script: |
+          # Temiz bir ortam
           rm -rf ios/Pods ios/Podfile.lock
           cd ios
+          pod repo update
           pod deintegrate || true
-          pod install
+          cd ..
+      - name: Podfile’ı DOĞRU şablonla yaz
+        script: |
+          cat > ios/Podfile <<'PODFILE'
+          platform :ios, '13.0'
+
+          require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root = `flutter --flutter-root`.strip)
+
+          flutter_ios_podfile_setup
+
+          target 'Runner' do
+            # Çoğu projede framework’e gerek yok; sorun çıkarıyorsa açma.
+            # use_frameworks! :linkage => :static if ENV['USE_FRAMEWORKS'] == 'true'
+            use_modular_headers!
+
+            flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+          end
+
+          post_install do |installer|
+            flutter_additional_ios_build_settings(installer)
+
+            # Apple Silicon sim build karışıklıklarını engelle
+            installer.pods_project.targets.each do |t|
+              t.build_configurations.each do |config|
+                config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+                config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
+              end
+            end
+          end
+          PODFILE
+          echo "Podfile yazıldı:"
+          tail -n +1 ios/Podfile
+      - name: Pods kurulum
+        script: |
+          cd ios
+          pod install --verbose
           cd ..
       - name: iOS (Simulator, no codesign) build
         script: |
-          # En hızlı: Debug sim
+          # En hızlı seçenek: debug sim
           flutter build ios --simulator --debug --no-codesign
-          # İstersen release sim:
+          # Release sim istersen:
           # flutter build ios --simulator --release --no-codesign
       - name: .app paketle (zip)
         script: |
