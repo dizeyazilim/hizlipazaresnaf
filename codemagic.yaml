@@ -2,31 +2,8 @@ workflows:
   ios_simulator:
     name: iOS Simulator (.app)
     environment:
-      flutter: "3.22.2"   # Dart 3.x içerir
+      flutter: "3.22.2"   # Dart 3 içerir
       xcode: latest
-    scripts:
-      - name: Show versions
-        script: |
-          flutter --version
-          dart --version
-      - name: Flutter deps
-        script: flutter pub get
-      - name: Build for iOS Simulator (no signing)
-        script: flutter build ios --simulator --release
-      - name: Zip Runner.app for download
-        script: |
-          cd build/ios/iphonesimulator
-          zip -r Runner-sim.zip Runner.app
-    artifacts:
-      - build/ios/iphonesimulator/Runner-sim.zip
-
-  ios_testflight:
-    name: iOS Release (TestFlight)
-    environment:
-      flutter: "3.22.2"   # Dart 3.x
-      xcode: latest
-      vars:
-        BUNDLE_ID: "com.hizlipazaresnaf.app"
     triggering:
       events:
         - push
@@ -39,22 +16,19 @@ workflows:
         script: |
           flutter --version
           dart --version
+      - name: Flutter deps
+        script: flutter pub get
       - name: CocoaPods
         script: |
           cd ios
           pod repo update
           pod install
           cd ..
-      - name: Build IPA
+      - name: Build for iOS Simulator (no signing)
+        script: flutter build ios --simulator --release
+      - name: Zip Runner.app for download
         script: |
-          flutter pub get
-          flutter build ipa --release --build-name=1.0.0 --build-number=1
+          cd build/ios/iphonesimulator
+          zip -r Runner-sim.zip Runner.app
     artifacts:
-      - build/ios/ipa/*.ipa
-      - build/ios/archive/*.xcarchive
-    publishing:
-      app_store_connect:
-        api_key: $APP_STORE_CONNECT_API_KEY
-        submit_to_testflight: true
-        beta_groups:
-          - Internal Testers
+      - build/ios/iphonesimulator/Runner-sim.zip
