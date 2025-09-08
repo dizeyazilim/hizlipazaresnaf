@@ -1,0 +1,56 @@
+workflows:
+  ios_simulator:
+    name: iOS Simulator (.app)
+    environment:
+      flutter: stable
+      xcode: latest
+    triggering:
+      events: [ workflow_dispatch ]  # Codemagic panelinden manuel başlat
+    scripts:
+      - name: Flutter deps
+        script: flutter pub get
+      - name: Build for iOS Simulator (no signing)
+        script: flutter build ios --simulator --release
+      - name: Zip Runner.app for download
+        script: |
+          cd build/ios/iphonesimulator
+          zip -r Runner-sim.zip Runner.app
+    artifacts:
+      - build/ios/iphonesimulator/Runner-sim.zip
+
+  ios_testflight:
+    name: iOS Release (TestFlight)
+    environment:
+      flutter: stable
+      xcode: latest
+      vars:
+        BUNDLE_ID: "com.hizlipazaresnaf.app"   # kendi Bundle ID'in
+    triggering:
+      events: [ push ]
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+    scripts:
+      - name: Flutter deps
+        script: flutter pub get
+      - name: CocoaPods
+        script: |
+          cd ios
+          pod install
+          cd ..
+      - name: Build IPA
+        script: |
+          flutter build ipa \
+            --release \
+            --build-name=1.0.0 \
+            --build-number=1
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - build/ios/archive/*.xcarchive
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_API_KEY
+        submit_to_testflight: true
+        beta_groups:
+          - Internal Testers
