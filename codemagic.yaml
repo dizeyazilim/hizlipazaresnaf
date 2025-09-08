@@ -2,10 +2,8 @@ workflows:
   ios_simulator:
     name: iOS Simulator (.app)
     environment:
-      flutter: "3.22.2"     # Dart 3.x içerir
+      flutter: "3.22.2"   # Dart 3.x içerir
       xcode: latest
-    triggering:
-      events: [ workflow_dispatch ]
     scripts:
       - name: Show versions
         script: |
@@ -25,12 +23,13 @@ workflows:
   ios_testflight:
     name: iOS Release (TestFlight)
     environment:
-      flutter: "3.22.2"     # Dart 3.x
+      flutter: "3.22.2"   # Dart 3.x
       xcode: latest
       vars:
         BUNDLE_ID: "com.hizlipazaresnaf.app"
     triggering:
-      events: [ push ]
+      events:
+        - push
       branch_patterns:
         - pattern: main
           include: true
