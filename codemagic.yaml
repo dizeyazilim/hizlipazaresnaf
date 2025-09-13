@@ -1,6 +1,6 @@
 ﻿workflows:
   flutter_workflows_ios_sim_debug:
-    name: flutter workflows â€¢ iOS Simulator (Debug)
+    name: flutter workflows - iOS Simulator (Debug)
     instance_type: mac_mini_m2
     max_build_duration: 30
     environment:
@@ -49,7 +49,7 @@
           flutter_ios_podfile_setup
 
           target 'Runner' do
-            # use_frameworks! :linkage => :static   # gerekirse aÃ§
+            # use_frameworks! :linkage => :static   # enable only if you need it
             use_modular_headers!
             flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
           end
@@ -81,7 +81,7 @@
           APP_DIR="build/ios/iphonesimulator"
           APP_PATH=$(find "$APP_DIR" -maxdepth 1 -name "*.app" | head -n1)
           if [ -z "$APP_PATH" ]; then
-            echo "Simulator .app bulunamadÄ±"; exit 1
+            echo "Simulator .app not found"; exit 1
           fi
           (cd "$APP_DIR" && zip -r "Runner.app.zip" "$(basename "$APP_PATH")" >/dev/null)
           echo "Ready: $APP_DIR/Runner.app.zip"
@@ -90,7 +90,7 @@
       - build/ios/iphonesimulator/Runner.app.zip
 
   flutter_workflows_ios_sim_release:
-    name: flutter workflows â€¢ iOS Simulator (Release)
+    name: flutter workflows - iOS Simulator (Release)
     instance_type: mac_mini_m2
     max_build_duration: 30
     environment:
@@ -104,7 +104,11 @@
         - $HOME/Library/Caches/CocoaPods
         - $HOME/Library/Developer/Xcode/DerivedData
     triggering:
-      events: [ manual ]  # releaseâ€™i elle Ã§alÄ±ÅŸtÄ±r
+      events:
+        - tag
+      tag_patterns:
+        - pattern: v*
+          include: true
     scripts:
       - name: Flutter precache & pub get
         script: |
@@ -165,7 +169,7 @@
           APP_DIR="build/ios/iphonesimulator"
           APP_PATH=$(find "$APP_DIR" -maxdepth 1 -name "*.app" | head -n1)
           if [ -z "$APP_PATH" ]; then
-            echo "Simulator .app bulunamadÄ±"; exit 1
+            echo "Simulator .app not found"; exit 1
           fi
           (cd "$APP_DIR" && zip -r "Runner.app.zip" "$(basename "$APP_PATH")" >/dev/null)
           echo "Ready: $APP_DIR/Runner.app.zip"
