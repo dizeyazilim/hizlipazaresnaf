@@ -1,7 +1,7 @@
-workflows:
+﻿workflows:
   flutter_workflows_ios_sim_debug:
-    name: flutter workflows • iOS Simulator (Debug)
-    instance_type: mac_mini_m1
+    name: flutter workflows â€¢ iOS Simulator (Debug)
+    instance_type: mac_mini_m2
     max_build_duration: 30
     environment:
       flutter: 3.35.3
@@ -49,7 +49,7 @@ workflows:
           flutter_ios_podfile_setup
 
           target 'Runner' do
-            # use_frameworks! :linkage => :static   # gerekirse aç
+            # use_frameworks! :linkage => :static   # gerekirse aÃ§
             use_modular_headers!
             flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
           end
@@ -81,7 +81,7 @@ workflows:
           APP_DIR="build/ios/iphonesimulator"
           APP_PATH=$(find "$APP_DIR" -maxdepth 1 -name "*.app" | head -n1)
           if [ -z "$APP_PATH" ]; then
-            echo "Simulator .app bulunamadı"; exit 1
+            echo "Simulator .app bulunamadÄ±"; exit 1
           fi
           (cd "$APP_DIR" && zip -r "Runner.app.zip" "$(basename "$APP_PATH")" >/dev/null)
           echo "Ready: $APP_DIR/Runner.app.zip"
@@ -90,8 +90,8 @@ workflows:
       - build/ios/iphonesimulator/Runner.app.zip
 
   flutter_workflows_ios_sim_release:
-    name: flutter workflows • iOS Simulator (Release)
-    instance_type: mac_mini_m1
+    name: flutter workflows â€¢ iOS Simulator (Release)
+    instance_type: mac_mini_m2
     max_build_duration: 30
     environment:
       flutter: 3.35.3
@@ -104,7 +104,7 @@ workflows:
         - $HOME/Library/Caches/CocoaPods
         - $HOME/Library/Developer/Xcode/DerivedData
     triggering:
-      events: [ manual ]  # release’i elle çalıştır
+      events: [ manual ]  # releaseâ€™i elle Ã§alÄ±ÅŸtÄ±r
     scripts:
       - name: Flutter precache & pub get
         script: |
@@ -165,7 +165,7 @@ workflows:
           APP_DIR="build/ios/iphonesimulator"
           APP_PATH=$(find "$APP_DIR" -maxdepth 1 -name "*.app" | head -n1)
           if [ -z "$APP_PATH" ]; then
-            echo "Simulator .app bulunamadı"; exit 1
+            echo "Simulator .app bulunamadÄ±"; exit 1
           fi
           (cd "$APP_DIR" && zip -r "Runner.app.zip" "$(basename "$APP_PATH")" >/dev/null)
           echo "Ready: $APP_DIR/Runner.app.zip"
