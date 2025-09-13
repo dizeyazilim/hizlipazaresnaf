@@ -1,2 +1,0 @@
-<?php
-// HizliPazarVIP API

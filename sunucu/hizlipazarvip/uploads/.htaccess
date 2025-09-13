@@ -1,4 +1,0 @@
-<FilesMatch "\.(jpg|jpeg|png|gif)$">
-    Header set Access-Control-Allow-Origin "*"
-    Header set Access-Control-Allow-Methods "GET"
-</FilesMatch>
