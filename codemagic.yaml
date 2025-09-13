@@ -1,4 +1,4 @@
-﻿workflows:
+workflows:
   flutter_workflows_ios_sim_debug:
     name: flutter workflows - iOS Simulator (Debug)
     instance_type: mac_mini_m2
@@ -11,8 +11,8 @@
       cache_paths:
         - ~/.pub-cache
         - ios/Pods
-        - $HOME/Library/Caches/CocoaPods
-        - $HOME/Library/Developer/Xcode/DerivedData
+        - C:\Users\Dogan Can/Library/Caches/CocoaPods
+        - C:\Users\Dogan Can/Library/Developer/Xcode/DerivedData
     triggering:
       events: [ push ]
       branch_patterns:
@@ -49,7 +49,7 @@
           flutter_ios_podfile_setup
 
           target 'Runner' do
-            # use_frameworks! :linkage => :static   # enable only if you need it
+            # use_frameworks! :linkage => :static   # enable only if needed
             use_modular_headers!
             flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
           end
@@ -79,12 +79,12 @@
       - name: Zip the .app
         script: |
           APP_DIR="build/ios/iphonesimulator"
-          APP_PATH=$(find "$APP_DIR" -maxdepth 1 -name "*.app" | head -n1)
-          if [ -z "$APP_PATH" ]; then
+          APP_PATH=
+          if [ -z "" ]; then
             echo "Simulator .app not found"; exit 1
           fi
-          (cd "$APP_DIR" && zip -r "Runner.app.zip" "$(basename "$APP_PATH")" >/dev/null)
-          echo "Ready: $APP_DIR/Runner.app.zip"
+          (cd "" && zip -r "Runner.app.zip" "" >/dev/null)
+          echo "Ready: /Runner.app.zip"
     artifacts:
       - build/ios/iphonesimulator/*.app
       - build/ios/iphonesimulator/Runner.app.zip
@@ -101,11 +101,10 @@
       cache_paths:
         - ~/.pub-cache
         - ios/Pods
-        - $HOME/Library/Caches/CocoaPods
-        - $HOME/Library/Developer/Xcode/DerivedData
+        - C:\Users\Dogan Can/Library/Caches/CocoaPods
+        - C:\Users\Dogan Can/Library/Developer/Xcode/DerivedData
     triggering:
-      events:
-        - tag
+      events: [ tag ]
       tag_patterns:
         - pattern: v*
           include: true
