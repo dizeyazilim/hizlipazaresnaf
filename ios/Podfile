@@ -1,38 +1,30 @@
+# ios/Podfile
 platform :ios, '13.0'
 
-# Flutter’ın resmi podhelper’ını kullan (header/search-path’leri o ayarlar)
-require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root = `flutter --flutter-root`.strip)
+use_frameworks! :linkage => :static
+use_modular_headers!
+
+flutter_root = ENV['FLUTTER_ROOT']
+unless flutter_root && File.exist?(File.join(flutter_root, 'packages', 'flutter_tools', 'bin', 'podhelper'))
+  # Codemagic'de FLUTTER_ROOT genelde set olur. Olmazsa "which flutter" ile türetelim.
+  which_flutter = `which flutter`.strip
+  if which_flutter != '' && File.exist?(which_flutter)
+    flutter_root = File.expand_path('../../', File.dirname(which_flutter)) # .../bin/flutter -> sdk kökü
+  end
+end
+
+raise "FLUTTER_ROOT could not be determined" unless flutter_root
+
+require File.expand_path('packages/flutter_tools/bin/podhelper', flutter_root)
 
 flutter_ios_podfile_setup
 
 target 'Runner' do
-  # use_frameworks! :linkage => :static  # Gerekli değilse açma; bazı podlarda header zincirini bozabiliyor
-  use_modular_headers!
-
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 
 post_install do |installer|
-  # Flutter’ın ek iOS ayarları (HEADER_SEARCH_PATHS dâhil çoğu gerekli bayrağı ekler)
-  flutter_additional_ios_build_settings(installer)
-
-  installer.pods_project.targets.each do |t|
-    t.build_configurations.each do |config|
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
-      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
-    end
-
-    # Güvenlik için: sqflite_darwin gibi Flutter header'ını include eden podlara açık header yolu ekle
-    if t.name == 'sqflite_darwin' || t.name == 'Flutter' || t.name.start_with?('flutter_')
-      t.build_configurations.each do |config|
-        paths = [
-          '$(PODS_ROOT)/Flutter/Flutter.framework/Headers',
-          '$(PODS_ROOT)/Flutter/Flutter.xcframework/ios-arm64_x86_64-simulator/Headers',
-          '$(PODS_ROOT)/Headers/Public'
-        ].join(' ')
-        config.build_settings['HEADER_SEARCH_PATHS']  = "#{config.build_settings['HEADER_SEARCH_PATHS']} #{paths}"
-        config.build_settings['USER_HEADER_SEARCH_PATHS'] = "#{config.build_settings['USER_HEADER_SEARCH_PATHS']} #{paths}"
-      end
-    end
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
   end
 end
