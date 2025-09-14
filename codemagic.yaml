@@ -26,9 +26,10 @@ workflows:
           flutter --version
           flutter precache --ios --force
           flutter pub get
-      - name: Write Podfile (safe, no --flutter-root)
+      - name: Write Podfile (fixed post_install)
         script: |
           set -euxo pipefail
+          mkdir -p ios
           cat > ios/Podfile <<'PODFILE'
           platform :ios, '13.0'
 
@@ -45,19 +46,19 @@ workflows:
           flutter_ios_podfile_setup
 
           target 'Runner' do
-            # use_frameworks! :linkage => :static   # gerekirse aç
+            # use_frameworks! :linkage => :static   # enable only if needed
             use_modular_headers!
             flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
           end
 
           post_install do |installer|
-            flutter_additional_ios_build_settings(installer)
+            # Apply Flutter settings to each target (NOT the installer)
+            installer.pods_project.targets.each do |target|
+              flutter_additional_ios_build_settings(target)
 
-            installer.pods_project.targets.each do |t|
-              t.build_configurations.each do |config|
+              target.build_configurations.each do |config|
                 config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
                 config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
-                # Flutter headers'ı garanti et (Flutter.h not found hatasına karşı)
                 current = config.build_settings['HEADER_SEARCH_PATHS'] || '$(inherited)'
                 extra   = ' $(PODS_ROOT)/Flutter/Flutter.xcframework/ios-arm64_x86_64-simulator/Headers $(PODS_ROOT)/Headers/Public'
                 config.build_settings['HEADER_SEARCH_PATHS'] = "#{current}#{extra}"
@@ -78,7 +79,7 @@ workflows:
         script: |
           set -euxo pipefail
           flutter clean
-          # Debug sim (en hızlı). Release sim istiyorsan alttakini aç.
+          # Fastest: debug simulator. Uncomment release if you prefer.
           flutter build ios --simulator --debug --no-codesign
           # flutter build ios --simulator --release --no-codesign
       - name: Zip .app artifact
